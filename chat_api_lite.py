@@ -2,11 +2,15 @@ import tensorflow as tf
 import tensorflow_text
 from flask import Flask, jsonify
 from flask_restful import Api, Resource, reqparse
+import os
 
 app = Flask(__name__)
 api = Api(app)
 
-reloaded = tf.saved_model.load('chatter_engine')
+APP_ROOT = os.getcwd()
+app.config['MODEL'] = os.path.join(APP_ROOT, 'model')
+
+reloaded = tf.saved_model.load(os.path.join(app.config['MODEL'], 'chatter_engine'))
 user_chat = ''
 
 # Create parser for the payload data
@@ -24,6 +28,19 @@ class Chat(Resource):
         result_string = result['text'][0].numpy().decode()
         return result_string
 
+class HelloWorld(Resource):
+    def get(self):
+        return {'hello': 'world'}
+
+class status (Resource):
+    def get(self):
+        try:
+            return {'data': 'Api is Running'}
+        except:
+            return {'data': 'An Error Occurred during fetching Api'}
+
+api.add_resource(HelloWorld, '/')
+
 api.add_resource(Chat, '/chat')
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
